@@ -8,7 +8,7 @@ const Footer = () => {
 			<div className="w-full">
 				<div className="upper">
 					<h3 className="text-teal-200 text-xl font-semibold uppercase">
-						Trip Tide
+						TRAVEL BLOG
 					</h3>
 					<div className="social">
 						<Facebook size={25} className="icon" />
@@ -29,7 +29,6 @@ const Footer = () => {
 					</div>
 					<div className="right">
 						<ul>
-							<li>&copy; 2022 Trip Tide. All rights reserved.</li>
 							<a
 								href="https://github.com/demivlkv/trip-tide"
 								target="_blank"

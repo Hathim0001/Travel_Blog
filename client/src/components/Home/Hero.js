@@ -1,19 +1,15 @@
 import React from 'react';
 import { Link } from 'react-scroll';
 
-import Video from '../../assets/hero.mov';
+// ✅ Importing the local video file
+import Video from '../../assets/screenshots/trip-tide.mp4';
 
 const Hero = () => {
 	return (
 		<>
 			<div className="hero w-full h-screen relative text-white">
-				<video
-					autoPlay
-					loop
-					muted
-					id="video"
-					className="w-full h-full object-cover z-[-5]"
-				>
+				{/* ✅ Use the imported video */}
+				<video autoPlay loop muted id="video" className="w-full h-full object-cover z-[-5]">
 					<source src={Video} type="video/mp4" />
 				</video>
 
@@ -23,7 +19,9 @@ const Hero = () => {
 					<h1 className="text-2xl md:text-5xl">An ocean of possibilities</h1>
 					<h2 className="my-4 text-xl md:text-4xl">The whole world awaits</h2>
 					<Link to="search" smooth={true} duration={500}>
-						<button>Get Started</button>
+						<button className="px-6 py-3 bg-blue-500 rounded-md hover:bg-blue-600 transition">
+							Get Started
+						</button>
 					</Link>
 				</div>
 			</div>

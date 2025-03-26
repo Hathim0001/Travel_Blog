@@ -23,7 +23,7 @@ const HomeNavbar = () => {
 				<div className="logo">
 					<h2 className="font-semibold uppercase">
 						<a href="/" className="text-4xl hover:text-teal-200">
-							Trip Tide
+							TRAVEL BLOG
 						</a>
 					</h2>
 				</div>

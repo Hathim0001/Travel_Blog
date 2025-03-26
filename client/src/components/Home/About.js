@@ -8,7 +8,7 @@ const About = () => {
           Bringing the world to you
 				</h1>
 				<p className="my-4 text-center">
-					Trip Tide was founded in 2022 by a traveler, <em className="text-teal-400">for travelers</em>.
+					TRAVEL BLOG is used for, <em className="text-teal-400">Wander Lust guys.</em>.
 				</p>
 				<div className="flex flex-wrap justify-evenly items-start md:bg-[#ffffff8a] rounded-lg leading-loose">
 					<div className="w-full md:w-1/2 p-4">
