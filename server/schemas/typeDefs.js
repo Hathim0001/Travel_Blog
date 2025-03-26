@@ -7,7 +7,7 @@ const typeDefs = gql`
     email: String!
     location: String
     description: String
-    avatar: String!
+    avatar: String
     friendCount: Int
     posts: [Post]
     friends: [User]

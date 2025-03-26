@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
 const { ApolloServer } = require('apollo-server-express');
@@ -28,5 +30,5 @@ app.get('*', (req, res) => {
 });
 
 db.once('open', () => {
-  app.listen(PORT, () => console.log(`🌎 Now listening on port ${PORT}`));
+  app.listen(PORT, () => console.log(`Now listening on port ${PORT}`));
 });

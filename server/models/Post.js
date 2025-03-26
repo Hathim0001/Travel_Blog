@@ -4,11 +4,13 @@ const moment = require('moment');
 const postSchema = new Schema({
   postTitle: {
     type: String,
-    required: 'You need to write something!',
+    required: 'You need to write a title!',
+    trim: true,
   },
   postText: {
     type: String,
     required: 'You need to write something!',
+    trim: true,
   },
   createdAt: {
     type: Date,
@@ -18,6 +20,7 @@ const postSchema = new Schema({
   username: {
     type: String,
     required: true,
+    trim: true,
   },
   comments: [
     {
@@ -27,7 +30,11 @@ const postSchema = new Schema({
   ],
   likes: [
     {
-      username: String,
+      username: {
+        type: String,
+        required: true,
+        trim: true,
+      },
       createdAt: {
         type: Date,
         default: Date.now,
@@ -43,6 +50,7 @@ const postSchema = new Schema({
   },
 });
 
+// Virtuals for commentCount and likeCount
 postSchema.virtual('commentCount').get(function () {
   return this.comments.length;
 });
@@ -50,6 +58,11 @@ postSchema.virtual('commentCount').get(function () {
 postSchema.virtual('likeCount').get(function () {
   return this.likes.length;
 });
+
+// Index for frequently queried fields
+postSchema.index({ username: 1 });
+postSchema.index({ author: 1 });
+postSchema.index({ createdAt: -1 });
 
 const Post = model('Post', postSchema);
 module.exports = Post;

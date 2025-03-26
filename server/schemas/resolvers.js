@@ -1,5 +1,5 @@
 const { User, Post, Comment, Place } = require('../models');
-const { AuthenticationError } = require('apollo-server-express');
+const { AuthenticationError, ApolloError } = require('apollo-server-express');
 const { signToken } = require('../utils/auth');
 
 const resolvers = {
@@ -31,51 +31,104 @@ const resolvers = {
     },
     posts: async (parent, { username }) => {
       const params = username ? { username } : {};
-      return Post.find(params).sort({ createdAt: -1 });
+      return Post.find(params)
+        .sort({ createdAt: -1 })
+        .populate('comments')
+        .populate('author');
     },
     post: async (parent, { _id }) => {
       try {
-        const post = await Post.findOne({ _id });
+        const post = await Post.findOne({ _id })
+          .populate('comments')
+          .populate('author');
         if (post) {
           return post;
         } else {
-          throw new Error('Post not found');
+          throw new ApolloError('Post not found', 'POST_NOT_FOUND');
         }
       } catch (err) {
-        throw new Error(err);
+        throw new ApolloError('Error fetching post: ' + err.message, 'FETCH_ERROR');
       }
     },
   },
   Mutation: {
     addUser: async (parent, args) => {
-      const user = await User.create(args);
-      const token = signToken(user);
-      return { token, user };
-    },
-    login: async (parent, { email, password }) => {
-      const user = await User.findOne({ email });
-      if (!user) {
-        throw new AuthenticationError('Incorrect credentials');
-      }
-      const correctPw = await user.isCorrectPassword(password);
-      if (!correctPw) {
-        throw new AuthenticationError('Incorrect credentials');
-      }
-      const token = signToken(user);
-      return { token, user };
-    },
-    updateUser: async (parent, { input, userId }, context) => {
-      if (context.user) {
-        if (context.user._id === userId) {
-          const user = await User.findByIdAndUpdate(userId, { ...input }, { new: true })
-            .select('-__v -password');
-          const token = signToken(user);
-          return { token, user };
+      try {
+        const user = await User.create(args);
+        const token = signToken(user);
+        return { token, user };
+      } catch (error) {
+        if (error.code === 11000) {
+          if (error.keyPattern.username) {
+            throw new ApolloError('A user with this username already exists', 'DUPLICATE_USERNAME');
+          }
+          if (error.keyPattern.email) {
+            throw new ApolloError('A user with this email already exists', 'DUPLICATE_EMAIL');
+          }
         }
-        throw new AuthenticationError('You do not have permission to do that');
+        throw new ApolloError('Error creating user: ' + error.message, 'CREATE_USER_ERROR');
+      }
+    },
+    
+    addComment: async (parent, { postId, commentBody }, context) => {
+      console.log("Authenticated User:", context.user); // Debugging
+
+      if (!context.user) {
+        throw new AuthenticationError('You need to be logged in');
+      }
+
+      const post = await Post.findById(postId);
+      console.log("Post Found:", post); // Debugging
+
+      if (!post) {
+        throw new ApolloError('Post not found', 'POST_NOT_FOUND');
+      }
+
+      try {
+        const comment = await Comment.create({
+          commentBody,
+          username: context.user.username,
+          post: postId,
+          author: context.user._id,
+        });
+
+        console.log("New Comment Created:", comment); // Debugging
+
+        await Post.findByIdAndUpdate(
+          postId,
+          { $push: { comments: comment._id } },
+          { new: true, useFindAndModify: false }
+        );
+
+        const updatedPost = await Post.findById(postId).populate('comments');
+        console.log("Updated Post with Comments:", updatedPost); // Debugging
+
+        return comment;
+      } catch (err) {
+        throw new ApolloError('Error adding comment: ' + err.message, 'COMMENT_ERROR');
+      }
+    },
+
+    deleteComment: async (parent, { postId, commentId }, context) => {
+      if (context.user) {
+        const comment = await Comment.findById(commentId);
+        if (!comment) {
+          throw new ApolloError('Comment not found', 'COMMENT_NOT_FOUND');
+        }
+        if (comment.author.toString() !== context.user._id) {
+          throw new AuthenticationError('You do not have permission to delete this comment');
+        }
+        await comment.deleteOne();
+        await Post.findByIdAndUpdate(
+          { _id: postId },
+          { $pull: { comments: commentId } },
+          { new: true }
+        );
+        return 'Comment successfully deleted';
       }
       throw new AuthenticationError('You need to be logged in');
     },
+
     addPost: async (parent, args, context) => {
       if (context.user) {
         const post = await Post.create({ ...args, username: context.user.username, author: context.user._id });
@@ -88,109 +141,43 @@ const resolvers = {
       }
       throw new AuthenticationError('You need to be logged in');
     },
+
     deletePost: async (parent, { postId }, context) => {
       if (context.user) {
         const post = await Post.findById(postId);
-        await post.delete();
+        if (!post) {
+          throw new ApolloError('Post not found', 'POST_NOT_FOUND');
+        }
+        if (post.author.toString() !== context.user._id) {
+          throw new AuthenticationError('You do not have permission to delete this post');
+        }
+        await post.deleteOne();
+        await User.findByIdAndUpdate(
+          { _id: context.user._id },
+          { $pull: { posts: postId } },
+          { new: true }
+        );
         return 'Post successfully deleted';
       }
       throw new AuthenticationError('You need to be logged in');
     },
-    addComment: async (parent, { postId, commentBody }, context) => {
-      if (context.user) {
-        const comment = await Comment.create({
-          commentBody,
-          username: context.user.username,
-          post: postId,
-          author: context.user._id,
-        });
-        await Post.findByIdAndUpdate(
-          { _id: postId },
-          { $push: { comments: comment._id } },
-          { new: true }
-        );
-        return comment;
-      }
-      throw new AuthenticationError('You need to be logged in');
-    },
-    deleteComment: async (parent, { postId, commentId }, context) => {
-      if (context.user) {
-        const comment = await Comment.findById(commentId);
-        await comment.delete();
-        await Post.findByIdAndUpdate(
-          { _id: postId },
-          { $pull: { comments: commentId } },
-          { new: true }
-        );
-        return 'Comment successfully deleted';
-      }
-      throw new AuthenticationError('You need to be logged in');
-    },
+
     likePost: async (parent, { postId }, context) => {
       if (context.user) {
         const post = await Post.findById(postId);
-        if (post) {
-          if (post.likes.find((like) => like.username === context.user.username)) {
-            post.likes = post.likes.filter((like) => like.username !== context.user.username);
-          } else {
-            post.likes.push({
-              username: context.user.username,
-              createdAt: new Date().toISOString(),
-            });
-          }
-          await post.save();
-          return post;
+        if (!post) {
+          throw new ApolloError('Post not found', 'POST_NOT_FOUND');
+        }
+        if (post.likes.find((like) => like.username === context.user.username)) {
+          post.likes = post.likes.filter((like) => like.username !== context.user.username);
         } else {
-          throw new Error('Post not found');
+          post.likes.push({
+            username: context.user.username,
+            createdAt: new Date().toISOString(),
+          });
         }
-      }
-      throw new AuthenticationError('You need to be logged in');
-    },
-    addFriend: async (parent, { friendId }, context) => {
-      if (context.user) {
-        const updatedUser = await User.findOneAndUpdate(
-          { _id: context.user._id },
-          { $addToSet: { friends: friendId } },
-          { new: true }
-        ).populate('friends');
-        return updatedUser;
-      }
-      throw new AuthenticationError('You need to be logged in');
-    },
-    removeFriend: async (parent, { friendId }, context) => {
-      if (context.user) {
-        const updatedUser = await User.findOneAndUpdate(
-          { _id: context.user._id },
-          { $pull: { friends: friendId } },
-          { new: true }
-        ).populate('friends');
-        return updatedUser;
-      }
-      throw new AuthenticationError('You need to be logged in');
-    },
-    savePlace: async (parent, { placeId }, context) => {
-      if (context.user) {
-        const place = await Place.findOne({ placeId });
-        if (!place) {
-          throw new Error('Place not found');
-        }
-        const updatedUser = await User.findOneAndUpdate(
-          { _id: context.user._id },
-          { $addToSet: { savedPlaces: place._id } },
-          { new: true }
-        ).populate('savedPlaces');
-        return updatedUser;
-      }
-      throw new AuthenticationError('You need to be logged in');
-    },
-    removePlace: async (parent, { placeId }, context) => {
-      if (context.user) {
-        const updatedUser = await User.findOneAndUpdate(
-          { _id: context.user._id },
-          { $pull: { savedPlaces: placeId } },
-          { new: true }
-        ).populate('savedPlaces');
-        return updatedUser;
+        await post.save();
+        return post;
       }
       throw new AuthenticationError('You need to be logged in');
     },

@@ -6,6 +6,9 @@
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "apollo-server-express": "^3.10.0",
     "bcrypt": "^5.1.0",
