@@ -1,35 +1,31 @@
-const { Schema } = require('mongoose');
+const { Schema, model } = require('mongoose');
 const moment = require('moment');
 
-const commentSchema = new Schema(
-  {
-    commentBody: {
-      type: String,
-      required: true
-    },
-    username: {
-      type: String,
-      required: true
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-      get: timestamp => moment(timestamp).fromNow()
-    },
-    author: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
-        immutable: true
-      }
-    ]
+const commentSchema = new Schema({
+  commentBody: {
+    type: String,
+    required: true,
   },
-  {
-    toJSON: {
-      getters: true
-    }
-  }
-);
+  username: {
+    type: String,
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    get: (timestamp) => moment(timestamp).fromNow(),
+  },
+  post: {
+    type: Schema.Types.ObjectId,
+    ref: 'Post',
+    required: true,
+  },
+  author: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+});
 
-module.exports = commentSchema;
+const Comment = model('Comment', commentSchema);
+module.exports = Comment;

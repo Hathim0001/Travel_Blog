@@ -3,4 +3,4 @@ const Post = require('./Post');
 const Comment = require('./Comment');
 const Place = require('./Place');
 
-module.exports = { User, Post, Comment };
+module.exports = { User, Post, Comment, Place };
