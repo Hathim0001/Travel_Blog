@@ -22,7 +22,7 @@ export const ADD_USER = gql`
         email
         location
         description
-        avatar
+        avatar  
       }
     }
   }
