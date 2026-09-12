@@ -1,7 +1,7 @@
 const destinations = [
     {
         name: 'Kyoto, Japan',
-        image: 'https://images.unsplash.com/photo-1504198453319-5ce911bafcde?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2434&q=80',
+        image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=80',
         description: 'Get lost in the bamboo forests of Kyoto, Japan'
     },
     {

@@ -208,3 +208,44 @@
 .profile .btn {
   @apply py-1 px-3 flex items-center text-xs bg-gray-800 hover:bg-transparent text-gray-200 border-2 border-gray-800 hover:text-gray-800 rounded-md transition-all ease-in duration-300;
 }
+
+/* LEAFLET MAP OVERRIDES */
+/* Ensure Leaflet controls sit below the site navbar */
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 40 !important;
+}
+
+/* Popups and tooltips above markers */
+.leaflet-popup {
+  z-index: 45 !important;
+}
+
+/* Pane ordering */
+.leaflet-map-pane {
+  z-index: 10 !important;
+}
+
+/* Fix for map container inside flex layouts */
+.leaflet-container {
+  background: #e8f4f8;
+}
+
+/* Custom animation keyframes */
+@keyframes bounce {
+  0%, 100% {
+    transform: translate(-50%, 0);
+  }
+  50% {
+    transform: translate(-50%, -10px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .4;
+  }
+}

@@ -27,20 +27,6 @@ const Footer = () => {
 							<li>Contact</li>
 						</ul>
 					</div>
-					<div className="right">
-						<ul>
-							<a
-								href="https://github.com/demivlkv/trip-tide"
-								target="_blank"
-								className="flex justify-center hover:text-teal-200 cursor-pointer transition-all ease-in duration-500"
-							>
-								<li className="inline-flex">
-									Made with <Heart size={15} className="text-teal-200 mx-1" />{" "}
-									by Demi.
-								</li>
-							</a>
-						</ul>
-					</div>
 				</div>
 			</div>
 		</footer>
